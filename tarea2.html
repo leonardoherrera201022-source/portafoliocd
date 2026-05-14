@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lenguajes de Diseño & Programación</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --surface: #13141a;
+      --border: #222430;
+      --accent1: #ff4e50;
+      --accent2: #fc913a;
+      --accent3: #00c2cb;
+      --accent4: #a78bfa;
+      --accent5: #34d399;
+      --accent6: #f472b6;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --code-bg: #0d0e12;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: .4;
+    }
+
+    /* ─── HERO ─── */
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 80px 40px 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    header .eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: .75rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent3);
+      margin-bottom: 18px;
+    }
+    header h1 {
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+    header p {
+      max-width: 580px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    /* ─── SECTION LABELS ─── */
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 60px 40px 24px;
+    }
+
+    /* ─── GRID ─── */
+    .grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      padding: 36px 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: background .2s;
+      animation: fadeUp .5s ease both;
+    }
+    .card:hover { background: #191b24; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card:nth-child(1)  { animation-delay: .05s; }
+    .card:nth-child(2)  { animation-delay: .10s; }
+    .card:nth-child(3)  { animation-delay: .15s; }
+    .card:nth-child(4)  { animation-delay: .20s; }
+    .card:nth-child(5)  { animation-delay: .25s; }
+    .card:nth-child(6)  { animation-delay: .30s; }
+    .card:nth-child(7)  { animation-delay: .35s; }
+    .card:nth-child(8)  { animation-delay: .40s; }
+    .card:nth-child(9)  { animation-delay: .45s; }
+    .card:nth-child(10) { animation-delay: .50s; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .badge {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .06em;
+    }
+    .card-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--code-bg);
+    }
+    /* Fallback placeholder when image fails */
+    .card-img-placeholder {
+      width: 100%;
+      height: 180px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      background: var(--code-bg);
+    }
+    .card h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+    .card .type {
+      font-family: 'Space Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .card p {
+      font-size: .95rem;
+      color: #9ca3af;
+      line-height: 1.7;
+    }
+
+    /* ─── TAGS ─── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .tag {
+      font-family: 'Space Mono', monospace;
+      font-size: .65rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #1e2030;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      letter-spacing: .04em;
+    }
+
+    /* ─── CODE SNIPPET ─── */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .code-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c840; }
+    .code-lang {
+      margin-left: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: .1em;
+      color: var(--muted);
+    }
+    pre {
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem;
+      line-height: 1.75;
+      padding: 18px 20px;
+      overflow-x: auto;
+      color: #cbd5e1;
+      white-space: pre;
+    }
+
+    /* ─── SYNTAX HIGHLIGHT CLASSES ─── */
+    .kw  { color: #f472b6; }
+    .fn  { color: #60a5fa; }
+    .str { color: #34d399; }
+    .num { color: #fb923c; }
+    .cm  { color: #4b5563; font-style: italic; }
+    .sel { color: #a78bfa; }
+    .prop{ color: #38bdf8; }
+    .val { color: #fb7185; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 48px 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Guía Visual Interactiva</div>
+  <h1>Lenguajes de Diseño<br>& Programación</h1>
+  <p>Explora los lenguajes más importantes del desarrollo moderno: sus características, funciones esenciales y fragmentos de código reales.</p>
+</header>
+
+<p class="section-label">// Lenguajes de Programación</p>
+
+<div class="grid">
+
+  <!-- ══ HTML ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#ff4e5022;color:#ff4e50;border:1px solid #ff4e5044;">Marcado</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1621839673705-6617adf9e890?w=600&q=80" alt="HTML" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🌐</div>
+    <div>
+      <div class="type">Lenguaje de Marcado</div>
+      <h2 style="color:#ff4e50">HTML 5</h2>
+    </div>
+    <p>HyperText Markup Language es la columna vertebral de toda página web. Define la estructura y semántica del contenido mediante etiquetas anidadas.</p>
+    <div class="tags">
+      <span class="tag">Semántica</span>
+      <span class="tag">DOM</span>
+      <span class="tag">Accesibilidad</span>
+      <span class="tag">Forms</span>
+      <span class="tag">SEO</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">HTML</span>
+      </div>
+      <pre><span class="cm">&lt;!-- Estructura semántica --&gt;</span>
+<span class="kw">&lt;article</span> <span class="prop">class</span>=<span class="str">"card"</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;h1&gt;</span>Hola, mundo<span class="kw">&lt;/h1&gt;</span>
+  <span class="kw">&lt;p&gt;</span>Primer párrafo.<span class="kw">&lt;/p&gt;</span>
+  <span class="kw">&lt;a</span> <span class="prop">href</span>=<span class="str">"#"</span><span class="kw">&gt;</span>Leer más<span class="kw">&lt;/a&gt;</span>
+<span class="kw">&lt;/article&gt;</span></pre>
+    </div>
+  </div>
+
+  <!-- ══ CSS ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#264de422;color:#264de4;border:1px solid #264de455;">Estilos</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=600&q=80" alt="CSS" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🎨</div>
+    <div>
+      <div class="type">Hoja de Estilos</div>
+      <h2 style="color:#38bdf8">CSS 3</h2>
+    </div>
+    <p>Cascading Style Sheets controla la presentación visual: colores, tipografía, layout, animaciones y diseño responsivo para todos los dispositivos.</p>
+    <div class="tags">
+      <span class="tag">Flexbox</span>
+      <span class="tag">Grid</span>
+      <span class="tag">Animaciones</span>
+      <span class="tag">Variables</span>
+      <span class="tag">Media Queries</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">CSS</span>
+      </div>
+      <pre><span class="sel">.card</span> {
+  <span class="prop">display</span>: <span class="val">flex</span>;
+  <span class="prop">gap</span>: <span class="num">1rem</span>;
+  <span class="prop">background</span>: <span class="val">var(--surface)</span>;
+  <span class="prop">border-radius</span>: <span class="num">8px</span>;
+  <span class="prop">transition</span>: <span class="val">transform .2s</span>;
+}
+<span class="sel">.card:hover</span> { <span class="prop">transform</span>: <span class="val">translateY(-4px)</span>; }</pre>
+    </div>
+  </div>
+
+  <!-- ══ JavaScript ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#f7df1e22;color:#f7df1e;border:1px solid #f7df1e44;">Scripting</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=600&q=80" alt="JavaScript" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">⚡</div>
+    <div>
+      <div class="type">Lenguaje de Programación</div>
+      <h2 style="color:#f7df1e">JavaScript</h2>
+    </div>
+    <p>El lenguaje de la web. Agrega interactividad, manipula el DOM, gestiona eventos y permite construir aplicaciones completas tanto en frontend como en backend (Node.js).</p>
+    <div class="tags">
+      <span class="tag">ES2024</span>
+      <span class="tag">Async/Await</span>
+      <span class="tag">DOM</span>
+      <span class="tag">Node.js</span>
+      <span class="tag">Closures</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">JS</span>
+      </div>
+      <pre><span class="kw">const</span> <span class="fn">fetchData</span> = <span class="kw">async</span> (url) => {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(url);
+  <span class="kw">const</span> json = <span class="kw">await</span> res.<span class="fn">json</span>();
+  <span class="kw">return</span> json.<span class="prop">data</span>;
+};
+
+<span class="fn">fetchData</span>(<span class="str">"/api/items"</span>).<span class="fn">then</span>(<span class="fn">console</span>.log);</pre>
+    </div>
+  </div>
+
+  <!-- ══ Python ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#3776ab22;color:#4db8ff;border:1px solid #3776ab55;">Backend / Data</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=600&q=80" alt="Python" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🐍</div>
+    <div>
+      <div class="type">Lenguaje de Programación</div>
+      <h2 style="color:#4db8ff">Python 3</h2>
+    </div>
+    <p>Lenguaje versátil y legible, líder en ciencia de datos, IA/ML, automatización y desarrollo web (Django, FastAPI). Su sintaxis limpia reduce la curva de aprendizaje.</p>
+    <div class="tags">
+      <span class="tag">Django</span>
+      <span class="tag">FastAPI</span>
+      <span class="tag">NumPy</span>
+      <span class="tag">ML/AI</span>
+      <span class="tag">Scripting</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">Python</span>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">fibonacci</span>(n: <span class="fn">int</span>) -> <span class="fn">list</span>:
+    a, b = <span class="num">0</span>, <span class="num">1</span>
+    result = []
+    <span class="kw">while</span> a < n:
+        result.<span class="fn">append</span>(a)
+        a, b = b, a + b
+    <span class="kw">return</span> result
+
+<span class="fn">print</span>(fibonacci(<span class="num">100</span>))</pre>
+    </div>
+  </div>
+
+  <!-- ══ TypeScript ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#3178c622;color:#3178c6;border:1px solid #3178c655;">Tipado</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80" alt="TypeScript" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🔷</div>
+    <div>
+      <div class="type">Superset de JavaScript</div>
+      <h2 style="color:#60a5fa">TypeScript</h2>
+    </div>
+    <p>Añade tipado estático a JavaScript. Permite detectar errores en tiempo de compilación, mejora el autocompletado en IDEs y facilita el mantenimiento de grandes bases de código.</p>
+    <div class="tags">
+      <span class="tag">Tipos</span>
+      <span class="tag">Interfaces</span>
+      <span class="tag">Generics</span>
+      <span class="tag">Enums</span>
+      <span class="tag">Decorators</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">TS</span>
+      </div>
+      <pre><span class="kw">interface</span> <span class="fn">User</span> {
+  id: <span class="val">number</span>;
+  name: <span class="val">string</span>;
+  role: <span class="str">"admin"</span> | <span class="str">"viewer"</span>;
+}
+
+<span class="kw">const</span> greet = (u: <span class="fn">User</span>): <span class="val">string</span> =>
+  <span class="str">`Hola, </span><span class="kw">${</span>u.name<span class="kw">}</span><span class="str"> (</span><span class="kw">${</span>u.role<span class="kw">}</span><span class="str">)`</span>;</pre>
+    </div>
+  </div>
+
+  <!-- ══ SQL ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#f0833a22;color:#f0833a;border:1px solid #f0833a44;">Base de Datos</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=600&q=80" alt="SQL" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🗄️</div>
+    <div>
+      <div class="type">Lenguaje de Consultas</div>
+      <h2 style="color:#f0833a">SQL</h2>
+    </div>
+    <p>Structured Query Language es el estándar para gestionar bases de datos relacionales. Permite crear, leer, actualizar y eliminar datos con consultas precisas y relacionales.</p>
+    <div class="tags">
+      <span class="tag">SELECT</span>
+      <span class="tag">JOIN</span>
+      <span class="tag">Índices</span>
+      <span class="tag">Transacciones</span>
+      <span class="tag">Triggers</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">SQL</span>
+      </div>
+      <pre><span class="kw">SELECT</span> u.name, <span class="fn">COUNT</span>(o.id) <span class="kw">AS</span> total
+<span class="kw">FROM</span>   users u
+<span class="kw">JOIN</span>   orders o <span class="kw">ON</span> o.user_id = u.id
+<span class="kw">WHERE</span>  o.status = <span class="str">'paid'</span>
+<span class="kw">GROUP  BY</span> u.name
+<span class="kw">ORDER  BY</span> total <span class="kw">DESC</span>
+<span class="kw">LIMIT</span>  <span class="num">10</span>;</pre>
+    </div>
+  </div>
+
+</div><!-- /grid programación -->
+
+<p class="section-label">// Lenguajes & Herramientas de Diseño</p>
+
+<div class="grid">
+
+  <!-- ══ SASS/SCSS ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#cf649a22;color:#cf649a;border:1px solid #cf649a44;">Preprocesador</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1506097425191-7ad538b29cef?w=600&q=80" alt="SASS" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">💅</div>
+    <div>
+      <div class="type">Preprocesador CSS</div>
+      <h2 style="color:#cf649a">SASS / SCSS</h2>
+    </div>
+    <p>Extiende CSS con variables, mixins, funciones, anidamiento e importaciones. SCSS es compatible con la sintaxis CSS estándar y compila a CSS puro para los navegadores.</p>
+    <div class="tags">
+      <span class="tag">Variables</span>
+      <span class="tag">Mixins</span>
+      <span class="tag">Nesting</span>
+      <span class="tag">@extend</span>
+      <span class="tag">Funciones</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">SCSS</span>
+      </div>
+      <pre><span class="prop">$primary</span>: <span class="val">#ff4e50</span>;
+<span class="prop">$radius</span>:  <span class="val">8px</span>;
+
+<span class="sel">.btn</span> {
+  background: <span class="prop">$primary</span>;
+  border-radius: <span class="prop">$radius</span>;
+
+  <span class="sel">&:hover</span> {
+    background: <span class="fn">darken</span>(<span class="prop">$primary</span>, <span class="num">10%</span>);
+  }
+}</pre>
+    </div>
+  </div>
+
+  <!-- ══ SVG ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#f9731622;color:#f97316;border:1px solid #f9731644;">Gráficos</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80" alt="SVG" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">🔺</div>
+    <div>
+      <div class="type">Gráficos Vectoriales</div>
+      <h2 style="color:#f97316">SVG</h2>
+    </div>
+    <p>Scalable Vector Graphics describe imágenes mediante coordenadas y formas matemáticas. Se escalan sin pérdida de calidad y son manipulables con CSS y JavaScript directamente en el DOM.</p>
+    <div class="tags">
+      <span class="tag">Vectorial</span>
+      <span class="tag">Animable</span>
+      <span class="tag">Accesible</span>
+      <span class="tag">Paths</span>
+      <span class="tag">Filtros</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">SVG</span>
+      </div>
+      <pre><span class="kw">&lt;svg</span> <span class="prop">viewBox</span>=<span class="str">"0 0 100 100"</span>
+     <span class="prop">xmlns</span>=<span class="str">"http://www.w3.org/2000/svg"</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;circle</span> <span class="prop">cx</span>=<span class="str">"50"</span> <span class="prop">cy</span>=<span class="str">"50"</span>
+          <span class="prop">r</span>=<span class="str">"40"</span> <span class="prop">fill</span>=<span class="str">"#ff4e50"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;text</span> <span class="prop">x</span>=<span class="str">"50"</span> <span class="prop">y</span>=<span class="str">"55"</span>
+        <span class="prop">text-anchor</span>=<span class="str">"middle"</span><span class="kw">&gt;</span>SVG<span class="kw">&lt;/text&gt;</span>
+<span class="kw">&lt;/svg&gt;</span></pre>
+    </div>
+  </div>
+
+  <!-- ══ JSON ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#34d39922;color:#34d399;border:1px solid #34d39944;">Datos</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80" alt="JSON" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">📦</div>
+    <div>
+      <div class="type">Formato de Datos</div>
+      <h2 style="color:#34d399">JSON</h2>
+    </div>
+    <p>JavaScript Object Notation es el formato universal para intercambio de datos en APIs REST. Ligero, legible por humanos y soportado nativamente por prácticamente todos los lenguajes modernos.</p>
+    <div class="tags">
+      <span class="tag">APIs</span>
+      <span class="tag">Configuración</span>
+      <span class="tag">Serialización</span>
+      <span class="tag">REST</span>
+      <span class="tag">Schema</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">JSON</span>
+      </div>
+      <pre>{
+  <span class="prop">"usuario"</span>: {
+    <span class="prop">"id"</span>: <span class="num">42</span>,
+    <span class="prop">"nombre"</span>: <span class="str">"Ana López"</span>,
+    <span class="prop">"activo"</span>: <span class="kw">true</span>,
+    <span class="prop">"roles"</span>: [<span class="str">"admin"</span>, <span class="str">"editor"</span>]
+  }
+}</pre>
+    </div>
+  </div>
+
+  <!-- ══ Markdown ══ -->
+  <div class="card">
+    <div class="card-header">
+      <span class="badge" style="background:#a78bfa22;color:#a78bfa;border:1px solid #a78bfa44;">Documentación</span>
+    </div>
+    <img class="card-img" src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&q=80" alt="Markdown" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div class="card-img-placeholder" style="display:none">📝</div>
+    <div>
+      <div class="type">Lenguaje de Marcado Ligero</div>
+      <h2 style="color:#a78bfa">Markdown</h2>
+    </div>
+    <p>Lenguaje de marcado minimalista diseñado para ser legible como texto plano y convertible a HTML. Es el estándar de facto para README, wikis, blogs y documentación técnica.</p>
+    <div class="tags">
+      <span class="tag">README</span>
+      <span class="tag">Blogs</span>
+      <span class="tag">Wikis</span>
+      <span class="tag">GitHub</span>
+      <span class="tag">MDX</span>
+    </div>
+    <div class="code-block">
+      <div class="code-bar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="code-lang">MD</span>
+      </div>
+      <pre><span class="kw"># Mi Proyecto</span>
+
+<span class="str">**Descripción** breve del proyecto.</span>
+
+<span class="fn">## Instalación</span>
+
+<span class="cm">```bash</span>
+npm install mi-proyecto
+<span class="cm">```</span>
+
+- Característica uno
+- Característica dos</pre>
+    </div>
+  </div>
+
+</div><!-- /grid diseño -->
+
+<footer>
+  © 2026 &nbsp;·&nbsp; Lenguajes de Diseño &amp; Programación &nbsp;·&nbsp; Guía de Referencia
+</footer>
+
+</body>
+</html>

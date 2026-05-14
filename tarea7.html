@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arduino — Componentes y Funcionamiento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0D0F0E;
+      --bg2:        #131614;
+      --bg3:        #1A1D1B;
+      --border:     #252926;
+      --border2:    #2E332F;
+      --text:       #E8EDE9;
+      --muted:      #6B7569;
+      --muted2:     #8A9487;
+      --accent:     #00E676;
+      --accent-dim: #00B85A;
+      --accent-bg:  #001A0C;
+      --amber:      #FFB300;
+      --amber-bg:   #1A1000;
+      --blue:       #29B6F6;
+      --blue-bg:    #001520;
+      --red:        #EF5350;
+      --red-bg:     #1A0000;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,15,14,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 56px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-logo .dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,230,118,0.4); }
+      50%       { opacity: 0.6; box-shadow: 0 0 0 6px rgba(0,230,118,0); }
+    }
+
+    .btn-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border: 1px solid var(--accent-dim);
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-home:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(0,230,118,0.3);
+    }
+
+    .btn-home svg { transition: transform 0.2s; }
+    .btn-home:hover svg { transform: translateX(-3px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      padding: 80px 48px 64px;
+      max-width: 1100px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.4;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .hero-tag::before {
+      content: '//';
+      color: var(--muted);
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 88px);
+      font-weight: 800;
+      line-height: 0.92;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+      position: relative;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 .line1 { color: var(--text); display: block; }
+    .hero h1 .line2 {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1px var(--accent);
+    }
+
+    .hero-desc {
+      color: var(--muted2);
+      font-size: 17px;
+      font-weight: 300;
+      max-width: 540px;
+      position: relative;
+      border-left: 2px solid var(--border2);
+      padding-left: 20px;
+    }
+
+    /* ── STAT BAR ── */
+    .stat-bar {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 48px 0 0;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 20px 32px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-val {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      display: block;
+    }
+
+    .stat-lbl {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── INDEX ── */
+    .toc {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 48px 48px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--muted2);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .toc-item:hover { border-color: var(--accent); color: var(--accent); }
+    .toc-item .n { color: var(--muted); }
+
+    /* ── GRID ── */
+    .grid-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 48px 100px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    /* Full-width cards */
+    .card.full { grid-column: 1 / -1; }
+
+    .card {
+      background: var(--bg2);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .card:nth-child(1)  { animation-delay: 0.05s; }
+    .card:nth-child(2)  { animation-delay: 0.10s; }
+    .card:nth-child(3)  { animation-delay: 0.15s; }
+    .card:nth-child(4)  { animation-delay: 0.20s; }
+    .card:nth-child(5)  { animation-delay: 0.25s; }
+    .card:nth-child(6)  { animation-delay: 0.30s; }
+    .card:nth-child(7)  { animation-delay: 0.35s; }
+    .card:nth-child(8)  { animation-delay: 0.40s; }
+    .card:nth-child(9)  { animation-delay: 0.45s; }
+    .card:nth-child(10) { animation-delay: 0.50s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Accent line on hover */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--card-color, var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .card:hover::after { transform: scaleX(1); }
+
+    /* Big background number */
+    .card-num {
+      position: absolute;
+      top: 16px; right: 24px;
+      font-size: 80px;
+      font-weight: 800;
+      color: var(--border2);
+      line-height: 1;
+      font-family: 'Space Mono', monospace;
+      user-select: none;
+    }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--card-color, var(--accent));
+      font-size: 18px;
+    }
+
+    .card-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border: 1px solid;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      border-color: var(--card-color, var(--accent));
+      color: var(--card-color, var(--accent));
+    }
+
+    .card h2 {
+      font-size: 26px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .card p {
+      color: var(--muted2);
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    /* ── SPEC LIST ── */
+    .spec-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .spec-row:last-child { border-bottom: none; }
+
+    .spec-key {
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+
+    .spec-val {
+      color: var(--text);
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+    }
+
+    /* ── PIN GRID ── */
+    .pin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-top: 20px;
+    }
+
+    .pin-cell {
+      background: var(--bg3);
+      padding: 14px 16px;
+    }
+
+    .pin-cell strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 4px;
+    }
+
+    .pin-cell span {
+      font-size: 13px;
+      color: var(--muted2);
+      font-weight: 300;
+    }
+
+    /* ── CHIP DIAGRAM ── */
+    .chip-wrap {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+      align-items: flex-start;
+    }
+
+    .chip-svg { flex-shrink: 0; }
+
+    .chip-desc {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chip-item {
+      padding: 12px 16px;
+      background: var(--bg3);
+      border-left: 2px solid var(--card-color, var(--accent));
+    }
+
+    .chip-item strong {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .chip-item span {
+      font-size: 13px;
+      color: var(--muted2);
+      font-weight: 300;
+    }
+
+    /* ── POWER DIAGRAM ── */
+    .power-row {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      margin-top: 20px;
+    }
+
+    .power-block {
+      flex: 1;
+      background: var(--bg3);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .power-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .power-lbl {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* color variants */
+    .c-green  { --card-color: var(--accent); }
+    .c-amber  { --card-color: var(--amber); }
+    .c-blue   { --card-color: var(--blue); }
+    .c-red    { --card-color: var(--red); }
+
+    .amber { color: var(--amber) !important; }
+    .blue  { color: var(--blue) !important; }
+    .red   { color: var(--red) !important; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-txt {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      nav, .hero, .toc, .grid-wrap, footer { padding-left: 20px; padding-right: 20px; }
+      .grid-wrap { grid-template-columns: 1fr; }
+      .card.full { grid-column: auto; }
+      .pin-grid { grid-template-columns: 1fr 1fr; }
+      .chip-wrap { flex-direction: column; }
+      .stat-bar { flex-wrap: wrap; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .hero h1 { font-size: 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span class="dot"></span>
+    ARDUINO_DOCS.v1
+  </a>
+  <a class="btn-home" href="index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M8.5 2.5L4 7L8.5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    PÁGINA PRINCIPAL
+  </a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-tag">HARDWARE &amp; ELECTRÓNICA</div>
+  <h1>
+    <span class="line1">Componentes</span>
+    <span class="line2">Arduino</span>
+  </h1>
+  <p class="hero-desc">Guía técnica de cada componente de la placa Arduino UNO: qué es, cómo funciona y para qué se utiliza en proyectos reales.</p>
+
+  <div class="stat-bar">
+    <div class="stat">
+      <span class="stat-val">14</span>
+      <span class="stat-lbl">Pines digitales</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">6</span>
+      <span class="stat-lbl">Entradas analógicas</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">16 MHz</span>
+      <span class="stat-lbl">Velocidad de reloj</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">32 KB</span>
+      <span class="stat-lbl">Memoria Flash</span>
+    </div>
+  </div>
+</header>
+
+<!-- TOC -->
+<nav class="toc" aria-label="Índice">
+  <a class="toc-item" href="#microcontrolador"><span class="n">01</span> Microcontrolador</a>
+  <a class="toc-item" href="#pines-digitales"><span class="n">02</span> Pines Digitales</a>
+  <a class="toc-item" href="#pines-analogicos"><span class="n">03</span> Pines Analógicos</a>
+  <a class="toc-item" href="#alimentacion"><span class="n">04</span> Alimentación</a>
+  <a class="toc-item" href="#usb"><span class="n">05</span> Puerto USB</a>
+  <a class="toc-item" href="#cristal"><span class="n">06</span> Cristal de Cuarzo</a>
+  <a class="toc-item" href="#reset"><span class="n">07</span> Botón Reset</a>
+  <a class="toc-item" href="#leds"><span class="n">08</span> LEDs indicadores</a>
+  <a class="toc-item" href="#icsp"><span class="n">09</span> Conector ICSP</a>
+  <a class="toc-item" href="#regulador"><span class="n">10</span> Regulador de voltaje</a>
+</nav>
+
+<!-- CARDS GRID -->
+<main class="grid-wrap">
+
+  <!-- 01 Microcontrolador (full) -->
+  <article class="card full c-green" id="microcontrolador">
+    <div class="card-num">01</div>
+    <div class="card-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="4" y="4" width="12" height="12" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="7" y="7" width="6" height="6" fill="currentColor" opacity="0.4"/>
+        <path d="M7 2V4M10 2V4M13 2V4M7 16V18M10 16V18M13 16V18M2 7H4M2 10H4M2 13H4M16 7H18M16 10H18M16 13H18" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <span class="card-tag">CEREBRO DE LA PLACA</span>
+    <h2>Microcontrolador ATmega328P</h2>
+    <p>Es el componente principal de Arduino UNO. Un chip integrado que contiene un procesador, memoria y periféricos de entrada/salida en un solo encapsulado. Se encarga de ejecutar el código que se carga desde la computadora y controlar todos los demás componentes.</p>
+    <p>Funciona leyendo instrucciones almacenadas en su memoria Flash, ejecutándolas a una velocidad de 16 millones de ciclos por segundo y enviando o recibiendo señales a través de sus pines.</p>
+    <div class="chip-wrap">
+      <svg class="chip-svg" width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="30" width="60" height="60" fill="#1A1D1B" stroke="#00E676" stroke-width="1.5"/>
+        <rect x="40" y="40" width="40" height="40" fill="#252926"/>
+        <text x="60" y="63" text-anchor="middle" font-family="Space Mono" font-size="7" fill="#00E676">ATmega</text>
+        <text x="60" y="73" text-anchor="middle" font-family="Space Mono" font-size="7" fill="#00E676">328P</text>
+        <!-- pins left -->
+        <line x1="10" y1="38" x2="30" y2="38" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="10" y1="48" x2="30" y2="48" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="10" y1="58" x2="30" y2="58" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="10" y1="68" x2="30" y2="68" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="10" y1="78" x2="30" y2="78" stroke="#6B7569" stroke-width="1.5"/>
+        <!-- pins right -->
+        <line x1="90" y1="38" x2="110" y2="38" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="90" y1="48" x2="110" y2="48" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="90" y1="58" x2="110" y2="58" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="90" y1="68" x2="110" y2="68" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="90" y1="78" x2="110" y2="78" stroke="#6B7569" stroke-width="1.5"/>
+        <!-- pins top -->
+        <line x1="40" y1="10" x2="40" y2="30" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="52" y1="10" x2="52" y2="30" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="64" y1="10" x2="64" y2="30" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="76" y1="10" x2="76" y2="30" stroke="#6B7569" stroke-width="1.5"/>
+        <!-- pins bottom -->
+        <line x1="40" y1="90" x2="40" y2="110" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="52" y1="90" x2="52" y2="110" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="64" y1="90" x2="64" y2="110" stroke="#6B7569" stroke-width="1.5"/>
+        <line x1="76" y1="90" x2="76" y2="110" stroke="#6B7569" stroke-width="1.5"/>
+      </svg>
+      <div class="chip-desc">
+        <div class="chip-item">
+          <strong>Flash Memory — 32 KB</strong>
+          <span>Almacena el programa (sketch) cargado desde el IDE. Persiste aunque se apague la placa.</span>
+        </div>
+        <div class="chip-item">
+          <strong>SRAM — 2 KB</strong>
+          <span>Memoria de trabajo. Guarda variables mientras el programa se ejecuta. Se borra al apagar.</span>
+        </div>
+        <div class="chip-item">
+          <strong>EEPROM — 1 KB</strong>
+          <span>Memoria no volátil para guardar datos que deben persistir entre reinicios.</span>
+        </div>
+        <div class="chip-item">
+          <strong>Velocidad — 16 MHz</strong>
+          <span>Ejecuta 16 millones de instrucciones por segundo gracias al cristal externo.</span>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 02 Pines Digitales -->
+  <article class="card c-green" id="pines-digitales">
+    <div class="card-num">02</div>
+    <span class="card-tag">E/S DIGITAL</span>
+    <h2>Pines Digitales (0–13)</h2>
+    <p>Son 14 pines que funcionan con dos estados: HIGH (5V) o LOW (0V). Pueden configurarse como entrada para leer sensores o como salida para controlar actuadores.</p>
+    <p>Los pines marcados con <strong style="color:var(--accent)">~</strong> (3, 5, 6, 9, 10, 11) soportan PWM, que simula señales analógicas variando el ciclo de trabajo.</p>
+    <div class="pin-grid">
+      <div class="pin-cell"><strong>D0 / D1</strong><span>TX/RX — comunicación serial</span></div>
+      <div class="pin-cell"><strong>D2 / D3</strong><span>Interrupciones externas</span></div>
+      <div class="pin-cell"><strong>D3,5,6…</strong><span>~ PWM — salida analógica</span></div>
+      <div class="pin-cell"><strong>D10–D13</strong><span>SPI — comunicación rápida</span></div>
+      <div class="pin-cell"><strong>D13</strong><span>LED integrado en la placa</span></div>
+      <div class="pin-cell"><strong>INPUT_PULLUP</strong><span>Resistencia interna activa</span></div>
+    </div>
+  </article>
+
+  <!-- 03 Pines Analógicos -->
+  <article class="card c-amber" id="pines-analogicos">
+    <div class="card-num">03</div>
+    <span class="card-tag">ENTRADA ANALÓGICA</span>
+    <h2>Pines Analógicos (A0–A5)</h2>
+    <p>Son 6 entradas que leen voltajes continuos entre 0 V y 5 V y los convierten a valores enteros de 0 a 1023 mediante el convertidor ADC (10 bits de resolución).</p>
+    <p>Permiten conectar sensores de temperatura, luz, presión, humedad y cualquier dispositivo que produzca señales variables.</p>
+    <div class="spec-list">
+      <div class="spec-row">
+        <span class="spec-key">Resolución ADC</span>
+        <span class="spec-val amber">10 bits (0–1023)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Voltaje de referencia</span>
+        <span class="spec-val amber">0 V – 5 V</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Función</span>
+        <span class="spec-val">analogRead(A0)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-key">Uso digital opcional</span>
+        <span class="spec-val">Sí (A0=D14 … A5=D19)</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- 04 Alimentación -->
+  <article class="card c-red" id="alimentacion">
+    <div class="card-num">04</div>
+    <span class="card-tag">FUENTE DE ENERGÍA</span>
+    <h2>Pines de Alimentación</h2>
+    <p>Proporcionan energía a los componentes conectados a la placa. Permiten alimentar sensores, motores y módulos sin necesidad de una fuente externa adicional.</p>
+    <div class="power-row">
+      <div class="power-block">
+        <span class="power-val red">5 V</span>
+        <span class="power-lbl">Salida regulada</span>
+      </div>
+      <div class="power-block">
+        <span class="power-val red">3.3 V</span>
+        <span class="power-lbl">Para módulos BT/WiFi</span>
+      </div>
+      <div class="power-block">
+        <span class="power-val red">GND</span>
+        <span class="power-lbl">Tierra (masa)</span>
+      </div>
+      <div class="power-block">
+        <span class="power-val red">VIN</span>
+        <span class="power-lbl">Entrada 7–12 V</span>
+      </div>
+    </div>
+    <p style="margin-top:16px">La placa puede alimentarse por USB (5 V), por el jack de barril (7–12 V) o directamente en el pin VIN. El regulador interno convierte el voltaje a 5 V estables.</p>
+  </article>
+
+  <!-- 05 Puerto USB -->
+  <article class="card c-blue" id="usb">
+    <div class="card-num">05</div>
+    <span class="card-tag">COMUNICACIÓN</span>
+    <h2>Puerto USB (ATmega16U2)</h2>
+    <p>Permite conectar el Arduino a la computadora para cargar programas (sketches) y comunicarse en tiempo real mediante el Monitor Serial del IDE de Arduino.</p>
+    <p>Internamente, el chip ATmega16U2 actúa como puente USB–Serial, convirtiendo los datos del protocolo USB al protocolo UART que entiende el microcontrolador principal.</p>
+    <div class="spec-list">
+      <div class="spec-row"><span class="spec-key">Estándar</span><span class="spec-val blue">USB 2.0 / Tipo B</span></div>
+      <div class="spec-row"><span class="spec-key">Chip conversor</span><span class="spec-val blue">ATmega16U2</span></div>
+      <div class="spec-row"><span class="spec-key">Velocidades UART</span><span class="spec-val">9600 – 115200 baud</span></div>
+      <div class="spec-row"><span class="spec-key">Alimentación</span><span class="spec-val">Hasta 500 mA por USB</span></div>
+    </div>
+  </article>
+
+  <!-- 06 Cristal de Cuarzo -->
+  <article class="card c-green" id="cristal">
+    <div class="card-num">06</div>
+    <span class="card-tag">TEMPORIZACIÓN</span>
+    <h2>Cristal de Cuarzo</h2>
+    <p>Es un oscilador piezoeléctrico que vibra a exactamente 16 MHz. Actúa como el reloj del sistema, proporcionando la señal de temporización que sincroniza todas las operaciones del microcontrolador.</p>
+    <p>Sin él, el ATmega328P funcionaría solo a 8 MHz con su oscilador interno y con menor precisión. El cristal externo garantiza estabilidad para comunicaciones como UART, SPI e I²C.</p>
+    <div class="spec-list">
+      <div class="spec-row"><span class="spec-key">Frecuencia</span><span class="spec-val">16,000,000 Hz</span></div>
+      <div class="spec-row"><span class="spec-key">Ciclo de instrucción</span><span class="spec-val">62.5 nanosegundos</span></div>
+      <div class="spec-row"><span class="spec-key">Tipo</span><span class="spec-val">HC-49S SMD</span></div>
+    </div>
+  </article>
+
+  <!-- 07 Botón Reset -->
+  <article class="card c-amber" id="reset">
+    <div class="card-num">07</div>
+    <span class="card-tag">CONTROL</span>
+    <h2>Botón de Reset</h2>
+    <p>Reinicia el microcontrolador al ser presionado. Lleva el pin RESET a nivel bajo (LOW), lo que provoca que el programa comience a ejecutarse desde el principio, como si se acabara de encender la placa.</p>
+    <p>También se usa automáticamente por el IDE de Arduino antes de cargar un nuevo sketch, para poner el microcontrolador en modo de escucha del bootloader.</p>
+    <div class="spec-list">
+      <div class="spec-row"><span class="spec-key">Acción</span><span class="spec-val amber">Activo en LOW (0 V)</span></div>
+      <div class="spec-row"><span class="spec-key">Estado normal</span><span class="spec-val">Pull-up interno (HIGH)</span></div>
+      <div class="spec-row"><span class="spec-key">Pin asociado</span><span class="spec-val">RESET (PC6)</span></div>
+    </div>
+  </article>
+
+  <!-- 08 LEDs indicadores -->
+  <article class="card c-amber" id="leds">
+    <div class="card-num">08</div>
+    <span class="card-tag">INDICADORES VISUALES</span>
+    <h2>LEDs Indicadores</h2>
+    <p>La placa Arduino UNO incorpora cuatro LEDs para indicar el estado del sistema de forma visual, sin necesidad de código ni instrumentos.</p>
+    <div class="pin-grid">
+      <div class="pin-cell"><strong style="color:var(--accent)">ON</strong><span>Placa encendida y alimentada</span></div>
+      <div class="pin-cell"><strong style="color:var(--amber)">L</strong><span>Conectado a Pin 13 — controlable por código</span></div>
+      <div class="pin-cell"><strong style="color:var(--blue)">TX</strong><span>Parpadea al transmitir datos serial</span></div>
+      <div class="pin-cell"><strong style="color:var(--blue)">RX</strong><span>Parpadea al recibir datos serial</span></div>
+    </div>
+    <p style="margin-top:16px">El LED L (pin 13) es ideal para depuración rápida: un simple <code style="color:var(--accent);font-family:'Space Mono',monospace;font-size:13px">digitalWrite(13, HIGH)</code> lo enciende sin componentes externos.</p>
+  </article>
+
+  <!-- 09 ICSP -->
+  <article class="card c-blue" id="icsp">
+    <div class="card-num">09</div>
+    <span class="card-tag">PROGRAMACIÓN</span>
+    <h2>Conector ICSP</h2>
+    <p>El In-Circuit Serial Programming es un conector de 6 pines que permite programar el microcontrolador directamente, sin pasar por el USB, usando un programador externo (como AVR ISP). También expone el bus SPI para comunicación de alta velocidad con periféricos.</p>
+    <div class="spec-list">
+      <div class="spec-row"><span class="spec-key">MOSI</span><span class="spec-val blue">Master Out Slave In</span></div>
+      <div class="spec-row"><span class="spec-key">MISO</span><span class="spec-val blue">Master In Slave Out</span></div>
+      <div class="spec-row"><span class="spec-key">SCK</span><span class="spec-val blue">Serial Clock</span></div>
+      <div class="spec-row"><span class="spec-key">RESET</span><span class="spec-val">Reinicio del chip</span></div>
+      <div class="spec-row"><span class="spec-key">VCC / GND</span><span class="spec-val">Alimentación</span></div>
+    </div>
+  </article>
+
+  <!-- 10 Regulador de voltaje -->
+  <article class="card c-red" id="regulador">
+    <div class="card-num">10</div>
+    <span class="card-tag">GESTIÓN DE ENERGÍA</span>
+    <h2>Regulador de Voltaje</h2>
+    <p>El chip NCP1117 (o equivalente) toma el voltaje de entrada del jack de barril (7–12 V) y lo convierte en 5 V estables para alimentar el microcontrolador y los pines de la placa.</p>
+    <p>Trabaja con un regulador lineal: disipa el exceso de energía como calor, por lo que puede calentarse con cargas altas. Por eso se recomienda no exceder 12 V de entrada ni sobrecargar los pines de 5 V.</p>
+    <div class="spec-list">
+      <div class="spec-row"><span class="spec-key">Chip</span><span class="spec-val red">NCP1117 / MC33269</span></div>
+      <div class="spec-row"><span class="spec-key">Voltaje entrada</span><span class="spec-val red">7 V – 12 V (recomendado)</span></div>
+      <div class="spec-row"><span class="spec-key">Voltaje salida</span><span class="spec-val red">5 V estables</span></div>
+      <div class="spec-row"><span class="spec-key">Corriente máx.</span><span class="spec-val">~500 mA</span></div>
+      <div class="spec-row"><span class="spec-key">Tipo</span><span class="spec-val">Regulador lineal (LDO)</span></div>
+    </div>
+  </article>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-txt">// ARDUINO UNO — REFERENCIA TÉCNICA</span>
+  <a class="btn-home" href="index.html">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M8.5 2.5L4 7L8.5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    PÁGINA PRINCIPAL
+  </a>
+</footer>
+
+</body>
+</html>
